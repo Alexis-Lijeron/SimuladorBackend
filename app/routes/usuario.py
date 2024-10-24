@@ -4,6 +4,7 @@ from app.models.usuario import Usuario
 from app.models.rol import Rol
 from app.utils import hash_contraseña, verificar_contraseña
 from app.utils import crear_token_acceso, verificar_token, verificar_admin
+from pymongo.errors import PyMongoError
 from app.database import db
 from jose import JWTError
 from pydantic import BaseModel
