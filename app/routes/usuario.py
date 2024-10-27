@@ -64,15 +64,14 @@ class LoginData(BaseModel):
 # Login para obtener un token JWT y devolver el rol
 @router.post("/login/")
 async def login(datos: LoginData):
-    try:
         # Buscar usuario por correo
         usuario = usuarios.find_one({"correo": datos.correo})
         if not usuario:
-            raise HTTPException(status_code=400, detail="Correo o contraseña incorrectos")
+            raise HTTPException(status_code=404, detail="Correo no existe")
 
         # Verificar la contraseña
         if not verificar_contraseña(datos.password, usuario["password"]):
-            raise HTTPException(status_code=400, detail="Correo o contraseña incorrectos")
+            raise HTTPException(status_code=401, detail="Contraseña incorrecta")
 
         # Generar el token JWT
         access_token = crear_token_acceso(data={"sub": usuario["correo"], "rol": usuario["rol"]})
@@ -81,14 +80,10 @@ async def login(datos: LoginData):
         return {
             "access_token": access_token,
             "token_type": "bearer",
-            "rol": usuario["rol"]  # Esto se usará en el frontend para redirigir
+            "rol": usuario["rol"],  # Esto se usará en el frontend para redirigir
+            "nombre": usuario["nombre"],  # Opcional: devolver el nombre del usuario
+            "correo": usuario["correo"]  # Opcional: devolver el correo del usuario
         }
-
-    except PyMongoError as e:
-        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
     
 # Ruta protegida para obtener información del usuario actual
 @router.get("/usuarios/me")
