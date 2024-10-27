@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import usuario, doctor, pago, rol
+from app.routes import usuario, doctor, pago, rol,paciente
 
 app = FastAPI()
 
@@ -18,7 +18,7 @@ app.include_router(usuario.router)
 app.include_router(doctor.router)
 app.include_router(pago.router)
 app.include_router(rol.router)
-
+app.include_router(paciente.router)
 @app.get("/")
 def read_root():
     return {"message": "¡Conectado a MongoDB!"}
