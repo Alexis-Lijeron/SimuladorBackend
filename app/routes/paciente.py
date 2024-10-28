@@ -6,7 +6,7 @@ from bson import ObjectId
 from datetime import date, datetime
 from app.database import db
 from app.models.paciente import Paciente
-
+from bson import ObjectId 
 paciente_db=db['paciente']
 router=APIRouter()
 
@@ -97,3 +97,133 @@ async def actualizar_paciente(paciente_data: Paciente):
         raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+    
+@router.delete("/pacientes/{correo}")
+async def eliminar_paciente(correo: str):
+    try:
+        # Buscar el usuario en la colección `usuarios` por correo
+        usuario = db.user.find_one({"correo": correo})
+        
+        # Verificar si el usuario existe
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        # Buscar el paciente usando el `usuario_id` del usuario encontrado
+        paciente = db.pacientes.find_one({"usuario_id": usuario["_id"]})
+        
+        # Verificar si el paciente existe
+        if not paciente:
+            raise HTTPException(status_code=404, detail="Paciente no encontrado para este usuario")
+        
+        # Eliminar el paciente de la colección `pacientes`
+        resultado = db.pacientes.delete_one({"usuario_id": usuario["_id"]})
+        
+        # Verificar si se eliminó un documento
+        if resultado.deleted_count == 0:
+            raise HTTPException(status_code=500, detail="No se pudo eliminar el paciente")
+        
+        return {"mensaje": "Paciente eliminado exitosamente"}
+
+    except HTTPException as e:
+        raise e
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+
+@router.get("/pacientes/{correo}")
+async def obtener_paciente(correo: str):
+    try:
+        # Buscar el usuario en la colección `usuarios` por correo
+        usuario = db.user.find_one({"correo": correo})
+        
+        # Verificar si el usuario existe
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        # Buscar el paciente usando el `usuario_id` del usuario encontrado
+        paciente = db.pacientes.find_one({"usuario_id": usuario["_id"]})
+        
+        # Verificar si el paciente existe
+        if not paciente:
+            raise HTTPException(status_code=404, detail="Paciente no encontrado para este usuario")
+        
+        # Formatear la respuesta con los datos del paciente
+        paciente_data = {
+            "usuario_id": str(paciente["usuario_id"]),
+            "telefono": paciente["telefono"],
+            "direccion": paciente["direccion"],
+            "fecha_nacimiento": paciente["fecha_nacimiento"].isoformat(),
+            "carnet_identidad": paciente["carnet_identidad"],
+            "sexo": paciente.get("sexo")
+        }
+
+        return {"mensaje": "Paciente encontrado", "paciente": paciente_data}
+
+    except HTTPException as e:
+        raise e
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+
+@router.get("/pacientes/")
+async def obtener_todos_los_pacientes():
+    try:
+        # Obtener todos los documentos de la colección `pacientes`
+        pacientes = db.pacientes.find()
+
+        # Crear una lista para almacenar los datos de cada paciente
+        lista_pacientes = []
+        
+        # Recorrer cada paciente y obtener el correo del usuario asociado
+        for paciente in pacientes:
+            # Buscar el usuario asociado al paciente usando `usuario_id`
+            usuario = db.user.find_one({"_id": paciente["usuario_id"]})
+            
+            # Si el usuario existe, incluir el correo en los datos del paciente
+            if usuario:
+                paciente_data = {
+                    "correo": usuario["correo"],
+                    "telefono": paciente["telefono"],
+                    "direccion": paciente["direccion"],
+                    "fecha_nacimiento": paciente["fecha_nacimiento"].isoformat(),
+                    "carnet_identidad": paciente["carnet_identidad"],
+                    "sexo": paciente.get("sexo")
+                }
+                lista_pacientes.append(paciente_data)
+
+        return {"mensaje": "Pacientes encontrados", "pacientes": lista_pacientes}
+
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+
+
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+
+@router.delete("/pacientes/eliminarId/{id}")
+async def eliminar_paciente(id: str):
+    try:
+        # Verificar que el id tiene 24 caracteres
+        if len(id) != 24:
+            raise HTTPException(status_code=400, detail="ID proporcionado no es válido. Debe tener 24 caracteres hexadecimales.")
+        usuario_id = ObjectId(id)
+        usuario = db.user.find_one({"_id": usuario_id})
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        resultado_paciente = db.pacientes.delete_one({"usuario_id": usuario_id})
+        if resultado_paciente.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Paciente no encontrado para este usuario")
+        
+        return {"mensaje": "Paciente eliminado exitosamente"}
+
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+
