@@ -5,10 +5,14 @@ from bson.objectid import ObjectId
 from datetime import datetime
 
 pagos_db = db['pago']
+usuarios = db['usuario']
 router = APIRouter()
 
 @router.post("/pagos/", response_model=Pago)
 def crear_pago(pago: Pago):
+    usuario = usuarios.find_one({"_id": ObjectId(pago.usuario_id)})
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
     nuevo_pago = pago.dict()
     if isinstance(nuevo_pago['fecha'], datetime):  # Si es un objeto datetime, asegúrate de manejarlo correctamente
         nuevo_pago['fecha'] = nuevo_pago['fecha']

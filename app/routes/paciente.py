@@ -7,14 +7,36 @@ from datetime import date, datetime
 from app.database import db
 from app.models.paciente import Paciente
 
-paciente_db=db['paciente']
+paciente_db=db['pacientes']
 router=APIRouter()
+
+@router.get("/pacientes/",response_model=list[Paciente])
+async def obtener_pacientes():
+    try:
+        pacientes = list(paciente_db.find()) 
+        for paciente in pacientes:
+            paciente["id"] = str(paciente["_id"])
+            if "usuario_id" in paciente:
+                usuario = db.user.find_one({"_id": paciente["usuario_id"]})
+                
+                # Reemplazar usuario_id con el correo del usuario si existe
+                if usuario and "correo" in usuario:
+                    paciente["usuario_id"] = usuario["correo"]
+                else:
+                    paciente["usuario_id"] = None  # O algún valor predeterminado en caso de que no se encuentre el usuario
+
+        return pacientes
+
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
 
 @router.post("/pacientes/")
 async def crear_paciente(paciente_data: Paciente):
     try:
         # Buscar el usuario en la colección `usuarios` por correo
-        usuario = db.user.find_one({"correo": paciente_data.correo})
+        usuario = db.user.find_one({"correo": paciente_data.usuario_id})
         
         # Verificar si el usuario existe
         if not usuario:
