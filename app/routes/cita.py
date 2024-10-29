@@ -84,32 +84,58 @@ async def obtener_cita(cita_id: str):
         raise HTTPException(status_code=404, detail="Cita no encontrada")
     return cita
 
-
 @router.put("/citas/{cita_id}", response_model=Cita)
 async def editar_cita(cita_id: str, cita_data: Cita):
     # Verificar si la cita existe
-    cita = db.citas.find_one({"_id": cita_id})
+    cita = db.citas.find_one({"_id": ObjectId(cita_id)})
     if not cita:
         raise HTTPException(status_code=404, detail="Cita no encontrada")
 
-    # Verificar si el paciente y el doctor existen (si se están actualizando)
+    # Verificar si el paciente existe (si se está actualizando)
     if cita_data.paciente_id:
-        paciente = db.pacientes.find_one({"_id": cita_data.paciente_id})
+        usuario = db.user.find_one({"correo": cita_data.paciente_id})  # Asumir que cita_data.paciente_id es un correo
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        # Verificar que el ID del paciente coincida con el usuario
+        paciente = db.pacientes.find_one({"usuario_id": usuario["_id"]})
         if not paciente:
             raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
+        # Almacenar el _id del paciente en cita_data.paciente_id
+        cita_data.paciente_id = str(paciente["_id"])  # Convertir a str para respuesta
+
+    # Verificar si el doctor existe (si se está actualizando)
     if cita_data.doctor_id:
-        doctor = db.doctores.find_one({"_id": cita_data.doctor_id})
+        doctor = db.doctor.find_one({"nombre": cita_data.doctor_id})  # Cambia "nombre" si necesitas buscar por otro campo
         if not doctor:
             raise HTTPException(status_code=404, detail="Doctor no encontrado")
 
+        # Almacenar el _id del doctor en cita_data.doctor_id
+        cita_data.doctor_id = str(doctor["_id"])  # Convertir a str para respuesta
+
     # Actualizar la cita
-    updated_cita = {k: v for k, v in cita_data.dict().items() if v is not None}
-    db.citas.update_one({"_id": cita_id}, {"$set": updated_cita})
+    updated_cita = {k: v for k, v in cita_data.dict(exclude_unset=True).items() if v is not None}
 
-    # Devolver la cita actualizada
-    return {**updated_cita, "_id": cita_id}
+    # Convertir los IDs de paciente y doctor a ObjectId para la actualización
+    if 'paciente_id' in updated_cita:
+        updated_cita['paciente_id'] = ObjectId(updated_cita['paciente_id'])
+    if 'doctor_id' in updated_cita:
+        updated_cita['doctor_id'] = ObjectId(updated_cita['doctor_id'])
 
+    # Realizar la actualización en la base de datos
+    db.citas.update_one({"_id": ObjectId(cita_id)}, {"$set": updated_cita})
+
+    # Recuperar el documento actualizado
+    cita_actualizada_db = db.citas.find_one({"_id": ObjectId(cita_id)})
+
+    # Formato de respuesta
+    cita_actualizada_db['id'] = str(cita_actualizada_db['_id'])  # Convertir a str
+    cita_actualizada_db['paciente_id'] = str(cita_actualizada_db['paciente_id'])  # Convertir a str
+    cita_actualizada_db['doctor_id'] = str(cita_actualizada_db['doctor_id'])  # Convertir a str
+    del cita_actualizada_db['_id']  # Eliminar el campo _id si no deseas incluirlo en la respuesta
+
+    return cita_actualizada_db
 
 @router.delete("/citas/{cita_id}", response_model=Cita)
 async def eliminar_cita(cita_id: str):

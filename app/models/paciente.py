@@ -3,6 +3,7 @@ from typing import Optional
 from datetime import date
 # Modelo Pydantic para los datos de creación del Paciente
 class Paciente(BaseModel):
+    id: Optional[str] = None
     usuario_id: str  # El correo del usuario
     telefono: str
     direccion: str

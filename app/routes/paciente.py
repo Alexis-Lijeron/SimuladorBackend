@@ -7,7 +7,7 @@ from datetime import date, datetime
 from app.database import db
 from app.models.paciente import Paciente
 
-paciente_db=db['paciente']
+paciente_db=db['pacientes']
 router=APIRouter()
 
 @router.get("/pacientes/",response_model=list[Paciente])
@@ -16,6 +16,7 @@ async def obtener_pacientes():
         pacientes = list(paciente_db.find()) 
         for paciente in pacientes:
             paciente["id"] = str(paciente["_id"])
+            del paciente["_id"] 
             if "usuario_id" in paciente:
                 usuario = db.user.find_one({"_id": paciente["usuario_id"]})
                 
@@ -76,7 +77,7 @@ async def crear_paciente(paciente_data: Paciente):
 async def actualizar_paciente(paciente_data: Paciente):
     try:
         # Buscar el usuario en la colección `usuarios` por correo
-        usuario = db.user.find_one({"correo": paciente_data.correo})
+        usuario = db.user.find_one({"correo": paciente_data.usuario_id})
         
         # Verificar si el usuario existe
         if not usuario:
