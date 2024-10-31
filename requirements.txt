@@ -1,5 +1,12 @@
 fastapi
 pydantic
 pymongo
+uvicorn
 bcrypt
 python-dotenv
+python-jose
+pydantic[email]
+gunicorn
+python-dotenv
+flask
+pymongo[srv]
