@@ -13,18 +13,16 @@ async def crear_cita(cita: Cita):
     
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    # Verificar que el ID del paciente coincida con el usuario
+
     paciente = db.pacientes.find_one({"usuario_id": usuario["_id"]})
 
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
-    print(f"Buscando doctor con nombre: {cita.doctor_id}")
     doctor = db.doctor.find_one({"nombre": cita.doctor_id})  # Cambia esto si necesitas buscar por otro campo
     if not doctor:
-        raise HTTPException(status_code=404, detail="Doctor no encontrado: {cita.doctor_id}")
+        raise HTTPException(status_code=404, detail=f"Doctor no encontrado: {cita.doctor_id}")
 
-    # Si ambos existen, insertar la nueva cita
     nueva_cita = {
         "paciente_id":  paciente["_id"],
         "fecha": cita.fecha,
@@ -139,8 +137,23 @@ async def editar_cita(cita_id: str, cita_data: Cita):
 
 @router.delete("/citas/{cita_id}", response_model=Cita)
 async def eliminar_cita(cita_id: str):
-    cita = db.citas.find_one({"_id": cita_id})
+    # Convierte el cita_id a ObjectId
+    try:
+        cita_obj_id = ObjectId(cita_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de cita inválido")
+    
+    # Busca la cita con el ObjectId
+    cita = db.citas.find_one({"_id": cita_obj_id})
     if not cita:
         raise HTTPException(status_code=404, detail="Cita no encontrada")
-    db.citas.delete_one({"_id": cita_id})
+    
+    # Elimina la cita si existe
+    db.citas.delete_one({"_id": cita_obj_id})
+
+    # Asegúrate de convertir ObjectId a string en la respuesta
+    cita['paciente_id'] = str(cita['paciente_id'])
+    cita['doctor_id'] = str(cita['doctor_id'])
+    cita['_id'] = str(cita['_id'])
+
     return cita

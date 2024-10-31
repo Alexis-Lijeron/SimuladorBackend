@@ -5,12 +5,12 @@ from bson.objectid import ObjectId
 from datetime import datetime
 
 pagos_db = db['pago']
-usuarios = db['usuario']
+usuarios = db['user']
 router = APIRouter()
 
 @router.post("/pagos/", response_model=Pago)
 def crear_pago(pago: Pago):
-    usuario = usuarios.find_one({"_id": ObjectId(pago.usuario_id)})
+    usuario = usuarios.find_one({"correo": pago.usuario_id})
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     nuevo_pago = pago.dict()

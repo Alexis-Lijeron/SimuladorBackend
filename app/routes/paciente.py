@@ -193,18 +193,11 @@ async def obtener_paciente(correo: str):
 @router.get("/pacientes/")
 async def obtener_todos_los_pacientes():
     try:
-        # Obtener todos los documentos de la colección `pacientes`
         pacientes = db.pacientes.find()
-
-        # Crear una lista para almacenar los datos de cada paciente
         lista_pacientes = []
         
-        # Recorrer cada paciente y obtener el correo del usuario asociado
         for paciente in pacientes:
-            # Buscar el usuario asociado al paciente usando `usuario_id`
             usuario = db.user.find_one({"_id": paciente["usuario_id"]})
-            
-            # Si el usuario existe, incluir el correo en los datos del paciente
             if usuario:
                 paciente_data = {
                     "correo": usuario["correo"],
@@ -229,12 +222,9 @@ async def obtener_todos_los_pacientes():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
 
-@router.delete("/pacientes/eliminarId/{id}")
+@router.delete("/pacientes/{id}")
 async def eliminar_paciente(id: str):
     try:
-        # Verificar que el id tiene 24 caracteres
-        if len(id) != 24:
-            raise HTTPException(status_code=400, detail="ID proporcionado no es válido. Debe tener 24 caracteres hexadecimales.")
         usuario_id = ObjectId(id)
         usuario = db.user.find_one({"_id": usuario_id})
         if not usuario:
