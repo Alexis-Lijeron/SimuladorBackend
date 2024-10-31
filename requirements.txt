@@ -9,4 +9,4 @@ pydantic[email]
 gunicorn
 python-dotenv
 flask
-pymongo[srv]
+pymongo[srv]==4.10.1
