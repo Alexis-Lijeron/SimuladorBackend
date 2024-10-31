@@ -1,5 +1,6 @@
+import os
 from pymongo import MongoClient
-
+from dotenv import load_dotenv
 # Conexión a MongoDB
-client = MongoClient('mongodb+srv://rapupena2909:Hola2020@ecommerce.t4bf6tt.mongodb.net/?retryWrites=true&w=majority&appName=ecommerce/')
+client = MongoClient(os.getenv('MONGODB_URI'))
 db = client['simulador']
