@@ -16,3 +16,4 @@ mediapipe
 bpy
 python-multipart
 cloudinary
+trimesh
