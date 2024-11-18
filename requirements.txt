@@ -10,3 +10,5 @@ gunicorn
 python-dotenv
 flask
 pymongo[srv]==4.10.1
+opencv-python
+opencv-contrib-python
