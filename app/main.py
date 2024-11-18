@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import cita, usuario, doctor, pago, rol,paciente, generar_3d, subir_foto
+from app.routes import cita, usuario, doctor, pago, rol,paciente, subir_foto
 
 app = FastAPI()
 
