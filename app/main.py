@@ -21,7 +21,6 @@ app.include_router(rol.router)
 app.include_router(paciente.router)
 app.include_router(cita.router)
 app.include_router(subir_foto.router)
-app.include_router(generar_3d.router)
 @app.get("/")
 def read_root():
     return {"message": "¡Conectado a MongoDB!"}
