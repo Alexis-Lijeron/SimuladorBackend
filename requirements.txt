@@ -13,3 +13,4 @@ pymongo[srv]==4.10.1
 opencv-python
 opencv-contrib-python
 mediapipe
+bpy
