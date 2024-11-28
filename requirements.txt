@@ -17,3 +17,8 @@ python-multipart
 cloudinary
 trimesh
 rembg
+onnxruntime
+Flask
+requests
+aiofiles
+aiohttp
