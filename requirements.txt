@@ -10,13 +10,8 @@ gunicorn
 python-dotenv
 flask
 pymongo[srv]==4.10.1
-opencv-python
-opencv-contrib-python
-mediapipe
 python-multipart
 cloudinary
-trimesh
-rembg
 onnxruntime
 Flask
 requests
