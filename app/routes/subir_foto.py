@@ -20,7 +20,7 @@ router = APIRouter()
 
 def esperar_modelo_completado(task_id: str, api_key: str, intervalo_espera: int = 10) -> str:
     """
-    Espera a que el modelo esté listo consultando el estado de la tarea cada cierto intervalo de tiempo.
+    Espera a que el modelo esté listo consultando el estado de la tarea  cada cierto intervalo de tiempo.
     :param task_id: El ID de la tarea en Tripod AI.
     :param api_key: La clave de la API de Tripod AI.
     :param intervalo_espera: El tiempo de espera (en segundos) entre cada consulta para obtener el estado de la tarea.
@@ -153,11 +153,31 @@ async def upload_photos(files: List[UploadFile] = File(...), intervalo_espera: i
     
     # Función asincrónica para subir el archivo a Cloudinary
 
-async def subir_a_cloudinary(url_modelo_3d: str) -> str:
-    # Suponiendo que usas aiohttp para realizar la solicitud
-    async with ClientSession() as session:
-        async with session.get(url_modelo_3d) as response:
-            if response.status != 200:
-                raise Exception(f"Error al descargar el archivo: {response.status}")
-            data = await response.json()  # Obtiene la URL desde la respuesta JSON
-            return data["url"]  # Suponiendo que la respuesta contiene una clave 'url'
+
+def subir_a_cloudinary(model_url: str) -> str:
+    """
+    Descargar el modelo desde la URL proporcionada y subirlo a Cloudinary.
+    :param model_url: URL del modelo 3D generado por Tripod AI.
+    :return: URL del modelo en Cloudinary.
+    """
+    try:
+        # Descargar el archivo desde la URL del modelo 3D
+        response = requests.get(model_url)
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail="Error al descargar el modelo 3D.")
+        
+        # Guardar el archivo temporalmente
+        with open("modelo_3d.glb", "wb") as f:
+            f.write(response.content)
+        
+        # Subir el archivo a Cloudinary (usando `upload` si es un archivo pequeño)
+        upload_response = cloudinary.uploader.upload(
+            "modelo_3d.glb",  # El archivo descargado
+            public_id="modelos_3d/modelo_glb",  # Ruta para el archivo en Cloudinary
+            resource_type="auto"  # Detecta automáticamente el tipo de archivo
+        )
+        
+        # Retornar la URL del modelo en Cloudinary
+        return upload_response['secure_url']
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al subir el modelo a Cloudinary: {e}")
