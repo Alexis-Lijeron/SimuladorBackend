@@ -15,6 +15,30 @@ router = APIRouter()
 def str_to_objectid(id_str: str) -> ObjectId:
     return ObjectId(id_str)
 
+@router.get("/estado_simulaciones/por_simulacion/{simulacion_id}", response_model=List[EstadoSimulacion])
+async def obtener_estados_por_simulacion(simulacion_id: str):
+    """
+    Obtiene todos los estados de simulación asociados a un simulacion_id.
+    """
+    try:
+        # Buscar todos los estados asociados al simulacion_id
+        estados = list(estado_simulaciones_db.find({"simulacion_id": simulacion_id}))
+
+        # Convertir ObjectId a string y formatear los datos
+        for estado in estados:
+            estado["id"] = str(estado["_id"])
+            del estado["_id"]
+
+        if not estados:
+            raise HTTPException(status_code=404, detail="No se encontraron estados para este simulacion_id")
+
+        return estados
+
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+    
 #Funcion para obtener todos los estados de simulaciones
 @router.get("/estado_simulaciones/", response_model=List[EstadoSimulacion])
 async def obtener_estado_simulaciones():
