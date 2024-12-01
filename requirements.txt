@@ -16,3 +16,4 @@ Flask
 requests
 aiofiles
 aiohttp
+stripe

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import cita, estado_simulaciones, simulacion, usuario, doctor, pago, rol,paciente,subir_foto
+from app.routes import cita, estado_simulaciones, simulacion, usuario, stripe, doctor, pago, rol,paciente,subir_foto
 
 app = FastAPI()
 
@@ -18,6 +18,7 @@ app.include_router(usuario.router)
 app.include_router(doctor.router)
 app.include_router(pago.router)
 app.include_router(rol.router)
+app.include_router(stripe.router)
 app.include_router(paciente.router)
 app.include_router(cita.router)
 app.include_router(subir_foto.router)
