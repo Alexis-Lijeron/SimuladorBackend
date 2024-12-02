@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, HTTPException
 from app.database import db
 from app.models.simulacion import Simulacion
@@ -132,6 +133,29 @@ async def eliminar_simulacion(simulacion_id: str):
             raise HTTPException(status_code=500, detail="No se pudo eliminar la simulación")
 
         return {"mensaje": "Simulación eliminada exitosamente"}
+
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+
+@router.get("/pacientes/{paciente_id}/simulaciones", response_model=List[Simulacion])
+async def obtener_simulaciones_por_paciente(paciente_id: str):
+    """
+    Devuelve todas las simulaciones asociadas a un paciente.
+    """
+    try:
+        # Buscar simulaciones asociadas al paciente_id
+        simulaciones = list(simulacion_db.find({"paciente_id": paciente_id}))
+        if not simulaciones:
+            raise HTTPException(status_code=404, detail=f"No se encontraron simulaciones para el paciente con ID {paciente_id}")
+
+        # Convertir ObjectId a string
+        for simulacion in simulaciones:
+            simulacion["id"] = str(simulacion["_id"])
+            del simulacion["_id"]
+
+        return simulaciones
 
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")

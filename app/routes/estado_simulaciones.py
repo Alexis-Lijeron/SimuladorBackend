@@ -178,3 +178,26 @@ async def eliminar_estados_por_simulacion(simulacion_id: str):
         raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+
+@router.get("/simulaciones/{simulacion_id}/estados", response_model=List[EstadoSimulacion])
+async def obtener_estados_por_simulacion(simulacion_id: str):
+    """
+    Devuelve todos los estados asociados a una simulación específica.
+    """
+    try:
+        # Buscar estados asociados al simulacion_id
+        estados = list(estado_simulaciones_db.find({"simulacion_id": simulacion_id}))
+        if not estados:
+            raise HTTPException(status_code=404, detail="No se encontraron estados para esta simulación")
+
+        # Convertir ObjectId a string
+        for estado in estados:
+            estado["id"] = str(estado["_id"])
+            del estado["_id"]
+
+        return estados
+
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
