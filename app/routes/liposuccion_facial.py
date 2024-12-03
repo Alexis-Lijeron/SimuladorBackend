@@ -9,7 +9,7 @@ import struct
 
 # Configuración de Cloudinary
 cloudinary.config(
-    cloud_name="dvc8eh9sn",  # Reemplazar con tu Cloudinary Cloud Name
+    cloud_name="dvc8eh9sn",  # Reemplazar por tu Cloudinary Cloud Name
     api_key="672567371692998",       # Reemplazar con tu Cloudinary API Key
     api_secret="e9EU4ZerJoWFw5sk35nJA5sHDuY"  # Reemplazar con tu Cloudinary API Secret
 )
@@ -19,7 +19,7 @@ router = APIRouter()
 @router.post("/liposuccion_facial")
 async def liposuccion_facial(request: Request):
     """
-    Endpoint para procesar un modelo .glb, realizar transformaciones avanzadas,
+    Endpoint para procesar un modelo .glb, realizar transformaciones avanzadas para liposucción facial,
     y subirlo a Cloudinary en la carpeta 'liposuccion_facial' con un nombre único.
     """
     try:
@@ -67,7 +67,7 @@ async def liposuccion_facial(request: Request):
         else:
             raise HTTPException(status_code=400, detail="Formato no soportado: URI externa encontrada.")
 
-        # Modificar vértices con parámetros precisos
+        # Modificar vértices con parámetros avanzados para liposucción facial
         vertex_data = buffer_data[:buffer_view.byteLength]
         new_vertex_data = bytearray(vertex_data)
         for i in range(accessor.count):
@@ -75,21 +75,40 @@ async def liposuccion_facial(request: Request):
             x, y, z = struct.unpack_from("<fff", new_vertex_data, start_index)
 
             # Transformaciones específicas para liposucción facial
-            x = x * 1.02 - 0.003  # Escalar y desplazar en X
-            y = y * 0.99 + 0.001  # Escalar y desplazar en Y
-            z = z - 2.0 + (i % 7 * 0.2)  # Desplazar en Z con un patrón basado en el índice
+            if y > 0.0:  # Área superior del rostro
+                x *= 1.03  # Ensanchamiento
+                y *= 1.02  # Elevación ligera
+                z -= 0.01  # Ajuste en profundidad
+            elif y <= 0.0:  # Área inferior del rostro
+                x *= 1.02  # Reducción sutil
+                y *= 0.97  # Compresión ligera
+                z += 0.02  # Proyección hacia afuera
 
-            # Ajustes adicionales para vértices pares
-            if i % 2 == 0:
-                x -= 0.002
+            # Ajustes dinámicos basados en índices
+            if i % 2 == 0:  # Vértices pares
+                x += 0.001
+                z -= 0.002
                 y *= 1.01
+            if i % 5 == 0:  # Cada quinto vértice
+                x *= 1.05
+                y *= 0.98
+                z -= 0.01
+            if i % 10 == 0:  # Cada décimo vértice
+                x *= 0.95
+                y *= 1.02
                 z += 0.005
 
-            # Transformaciones más agresivas en grupos de vértices específicos
-            if i % 15 == 0:
-                x *= 1.05
-                y *= 0.95
-                z -= 0.1
+            # Ajustes específicos para mejillas
+            if -5.0 <= y <= 5.0 and -5.0 <= x <= 5.0:  # Zona media del rostro
+                z -= 0.015
+                x *= 1.01
+                y += 0.002
+
+            # Ajustes en zonas profundas o prominentes
+            if z > 0.0:  # Zonas prominentes
+                z *= 0.92
+            elif z < 0.0:  # Zonas profundas
+                z *= 1.08
 
             struct.pack_into("<fff", new_vertex_data, start_index, x, y, z)
 

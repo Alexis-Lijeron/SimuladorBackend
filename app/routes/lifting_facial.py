@@ -9,7 +9,7 @@ import struct
 
 # Configuración de Cloudinary
 cloudinary.config(
-    cloud_name="dvc8eh9sn",  # Reemplazar con tu Cloudinary Cloud Name
+    cloud_name="dvc8eh9sn",  # Reemplazar por tu Cloudinary Cloud Name
     api_key="672567371692998",       # Reemplazar con tu Cloudinary API Key
     api_secret="e9EU4ZerJoWFw5sk35nJA5sHDuY"  # Reemplazar con tu Cloudinary API Secret
 )
@@ -75,21 +75,40 @@ async def lifting_facial(request: Request):
             x, y, z = struct.unpack_from("<fff", new_vertex_data, start_index)
 
             # Transformaciones avanzadas específicas para lifting facial
-            x = x * 1.03 + 0.002  # Escalar y desplazar en X
-            y = y * 0.98 - 0.003  # Escalar y desplazar en Y
-            z = z - 5.0 + (i % 5 * 0.1)  # Desplazar en Z con un patrón basado en el índice
+            if y > 0.0:  # Parte superior del rostro
+                x *= 1.04  # Ensanchar sutilmente
+                y *= 1.03  # Elevación ligera
+                z -= 0.01  # Suavizado en profundidad
+            elif y <= 0.0:  # Parte inferior del rostro
+                x *= 1.02  # Ajuste lateral
+                y *= 0.97  # Compresión para tensión facial
+                z += 0.02  # Proyección hacia afuera
 
-            # Agregar ajustes específicos para vértices impares
-            if i % 2 != 0:
+            # Ajustes basados en índices
+            if i % 2 == 0:  # Vértices pares
                 x += 0.001
-                y -= 0.005
-                z += 0.002
-
-            # Agregar ajustes en zonas específicas de vértices
-            if i % 10 == 0:
-                x *= 0.95
+                z -= 0.002
                 y *= 1.01
-                z -= 0.3
+
+            if i % 5 == 0:  # Cada quinto vértice
+                x *= 1.05
+                y *= 0.98
+                z -= 0.01
+
+            if i % 10 == 0:  # Cada décimo vértice
+                x *= 0.95
+                y *= 1.02
+                z += 0.005
+
+            # Transformaciones dinámicas por zonas
+            if -5.0 <= y <= 5.0 and z > 0.0:  # Zona media del rostro
+                x *= 1.01
+                y += 0.002
+                z -= 0.02
+
+            if y > 5.0:  # Frente
+                z -= 0.03
+                y *= 1.04
 
             struct.pack_into("<fff", new_vertex_data, start_index, x, y, z)
 

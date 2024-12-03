@@ -19,7 +19,8 @@ router = APIRouter()
 @router.post("/rinoplastia")
 async def rinoplastia(request: Request):
     """
-    Endpoint para procesar un modelo .glb, modificarlo, y subirlo a Cloudinary.
+    Endpoint para procesar un modelo .glb, realizar transformaciones avanzadas para rinoplastia,
+    y subirlo a Cloudinary en la carpeta 'rinoplastia' con un nombre único.
     """
     try:
         # Obtener la URL del archivo del cliente
@@ -66,17 +67,51 @@ async def rinoplastia(request: Request):
         else:
             raise HTTPException(status_code=400, detail="Formato no soportado: URI externa encontrada.")
 
-        # Modificar vértices
+        # Modificar vértices con transformaciones avanzadas
         vertex_data = buffer_data[:buffer_view.byteLength]
         new_vertex_data = bytearray(vertex_data)
         for i in range(accessor.count):
             start_index = i * 12
             x, y, z = struct.unpack_from("<fff", new_vertex_data, start_index)
 
-            # Transformaciones
-            z -= 10.0
-            x *= 0.001
-            y += 15.0
+            # Región: Punta Nasal
+            if z < -8.0:
+                z -= 9.0  # Reducir prominencia
+                x *= 1.04  # Ensanchar fosas nasales
+                y *= 1.03  # Elevar ligeramente
+                if i % 3 == 0:  # Cada tercer vértice, suavizar más
+                    z += 0.02
+                    x *= 0.98
+
+            # Región: Dorso Nasal
+            elif -8.0 <= z <= 0.0:
+                z *= 0.92  # Suavizar la joroba
+                x *= 0.96  # Compactar simétricamente
+                y += 0.02  # Elevar dorso nasal
+                if i % 5 == 0:  # Corrección de puntos críticos
+                    z += 0.05
+                    y *= 1.01
+
+            # Región: Puente Nasal (Superior)
+            elif z > 0.0:
+                z *= 0.88  # Reducir altura del puente
+                x *= 0.94  # Compactar lateralmente
+                y += 0.01  # Elevar sutilmente
+
+            # Ajustes de simetría basados en índices
+            if i % 2 == 0:  # Vértices pares
+                x += 0.001
+                z -= 0.001
+            if i % 10 == 0:  # Vértices estratégicos
+                x *= 1.02
+                y *= 0.98
+                z -= 0.005
+
+            # Suavizado adicional para vértices seleccionados
+            if i % 25 == 0:
+                x *= 0.99
+                y *= 1.02
+                z += 0.01
 
             struct.pack_into("<fff", new_vertex_data, start_index, x, y, z)
 
@@ -85,12 +120,11 @@ async def rinoplastia(request: Request):
         gltf.save(output_file)
         print(f"Modelo modificado guardado como {output_file}.")
 
-        
         # Generar un nombre único para el archivo
         unique_id = str(uuid.uuid4())
         unique_filename = f"modelo_{unique_id}.glb"
-        
-        # Subir a Cloudinary
+
+        # Subir a Cloudinary en la carpeta 'rinoplastia' con un nombre único
         print("Subiendo el archivo a Cloudinary...")
         upload_response = cloudinary.uploader.upload(
             output_file,
@@ -105,7 +139,10 @@ async def rinoplastia(request: Request):
         os.remove(output_file)
 
         # Devolver la URL del modelo subido
-        return {"modified_file_url": modified_url}
+        return {
+            "message": "Modelo procesado y subido correctamente.",
+            "modified_file_url": modified_url
+        }
 
     except Exception as e:
         print(f"Error: {str(e)}")

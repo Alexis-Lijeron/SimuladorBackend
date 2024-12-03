@@ -9,9 +9,9 @@ import struct
 
 # Configuración de Cloudinary
 cloudinary.config(
-    cloud_name="dvc8eh9sn",  # Reemplazar con tu Cloudinary Cloud Name
-    api_key="672567371692998",       # Reemplazar con tu Cloudinary API Key
-    api_secret="e9EU4ZerJoWFw5sk35nJA5sHDuY"  # Reemplazar con tu Cloudinary API Secret
+    cloud_name="dvc8eh9sn",  # Reemplazar por tu Cloudinary Cloud Name
+    api_key="672567371692998",       # Reemplazar por tu Cloudinary API Key
+    api_secret="e9EU4ZerJoWFw5sk35nJA5sHDuY"  # Reemplazar por tu Cloudinary API Secret
 )
 
 router = APIRouter()
@@ -19,7 +19,8 @@ router = APIRouter()
 @router.post("/bichetomia")
 async def bichetomia(request: Request):
     """
-    Endpoint para procesar un modelo .glb, modificarlo, y subirlo a Cloudinary en la carpeta 'bichetomia' con un nombre único.
+    Endpoint para procesar un modelo .glb, realizar transformaciones avanzadas para bichetomía,
+    y subirlo a Cloudinary en la carpeta 'bichetomia' con un nombre único.
     """
     try:
         # Obtener la URL del archivo del cliente
@@ -66,17 +67,44 @@ async def bichetomia(request: Request):
         else:
             raise HTTPException(status_code=400, detail="Formato no soportado: URI externa encontrada.")
 
-        # Modificar vértices
+        # Modificar vértices con parámetros avanzados
         vertex_data = buffer_data[:buffer_view.byteLength]
         new_vertex_data = bytearray(vertex_data)
         for i in range(accessor.count):
             start_index = i * 12
             x, y, z = struct.unpack_from("<fff", new_vertex_data, start_index)
 
-            # Transformaciones específicas de bichetomía
-            z += 5.0
-            x -= 0.002
-            y *= 1.02
+            # Transformaciones avanzadas específicas para bichetomía
+            if x > 0.0:  # Lado derecho del rostro
+                x -= 0.005  # Reducir anchura
+                z += 3.0   # Ajustar proyección en profundidad
+                y *= 1.01  # Ligeramente elevar
+            elif x <= 0.0:  # Lado izquierdo del rostro
+                x += 0.005  # Reducir anchura
+                z += 3.0   # Ajustar proyección en profundidad
+                y *= 1.01  # Ligeramente elevar
+
+            # Ajustes adicionales basados en índices
+            if i % 2 == 0:  # Cada vértice par
+                x -= 0.002
+                z += 0.002
+                y *= 1.02
+
+            if i % 3 == 0:  # Cada tercer vértice
+                z -= 0.005
+                x *= 0.99
+                y += 0.001
+
+            if i % 10 == 0:  # Cada décimo vértice
+                x *= 0.98
+                y *= 0.99
+                z += 0.01
+
+            # Ajuste para zonas críticas de las mejillas
+            if -5.0 <= y <= 5.0 and z > 0.0:  # Zona central del rostro
+                x *= 1.02
+                z -= 0.02
+                y *= 1.01
 
             struct.pack_into("<fff", new_vertex_data, start_index, x, y, z)
 
