@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
-stripe.api_key = "api_key"
+stripe.api_key = "sk_test_51QCka6Klm9LmT8FzxESDOHlYiLiggAWp01mh8QJoE7PqSOT9n3h7Ln5JppMUJKtqXpiRkh0oCUdSIPDxllOfqukt003EpINgQt"
 
 @router.post("/create-payment-intent")
 async def create_payment_intent(amount: int):
