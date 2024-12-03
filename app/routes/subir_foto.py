@@ -10,7 +10,7 @@ import cloudinary
 import cloudinary.uploader
 # Configuración para la API de Tripod AI
 TRIPOD_API_URL = "https://api.tripo3d.ai/v2/openapi/upload"
-TRIPOD_API_KEY = "tsk_cWBIx4egEXfV2euuGOHuHbqZri5QMjvQrimCAuPh9vb"  # Sustituir con tu clave API
+TRIPOD_API_KEY = "tsk_u0JO9wcFhHAY800O0xhIakfbnTwxhzjJq3aESHDQTSL"  # Sustituir con tu clave API
 CLOUDINARY_URL = "dvc8eh9sn"  # Cambia <your_cloud_name>
 CLOUDINARY_API_KEY = "672567371692998"  # Sustituir con tu API key de Cloudinary
 CLOUDINARY_API_SECRET = "e9EU4ZerJoWFw5sk35nJA5sHDuY"  # Sustituir con tu API secret de Cloudinary
